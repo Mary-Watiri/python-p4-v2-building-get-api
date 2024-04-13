@@ -1,5 +1,4 @@
 # server/app.py
-
 from flask import Flask, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -23,20 +22,11 @@ def index():
 @app.route('/games')
 def games():
 
-    games = []
-    for game in Game.query.all():
-        game_dict = {
-            "title": game.title,
-            "genre": game.genre,
-            "platform": game.platform,
-            "price": game.price,
-        }
-        games.append(game_dict)
+    games = [game.to_dict() for game in Game.query.all()]
 
     response = make_response(
         games,
-        200,
-        {"Content-Type": "application/json"}
+        200
     )
 
     return response
@@ -45,15 +35,23 @@ def games():
 def game_by_id(id):
     game = Game.query.filter(Game.id == id).first()
 
-    game_dict = {
-        "title": game.title,
-        "genre": game.genre,
-        "platform": game.platform,
-        "price": game.price,
-    }
+    game_dict = game.to_dict()
 
     response = make_response(
         game_dict,
+        200
+    )
+
+    return response
+
+@app.route('/games/users/<int:id>')
+def game_users_by_id(id):
+    game = Game.query.filter(Game.id == id).first()
+
+    # use association proxy to get users for a game
+    users = [user.to_dict(rules=("-reviews",)) for user in game.users]
+    response = make_response(
+        users,
         200
     )
 
